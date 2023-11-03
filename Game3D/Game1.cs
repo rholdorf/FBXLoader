@@ -12,7 +12,7 @@ public class Game1 : Game
     private readonly GraphicsDeviceManager _graphics;
     private GraphicsDevice _gpu;
     private SpriteBatch _spriteBatch;
-    private Camera _cam;
+    private Camera _camera;
 
     // RECTANGLES
     private Rectangle _desktopRect;
@@ -21,7 +21,7 @@ public class Game1 : Game
     private RenderTarget2D _mainTarget;
 
     // INPUT & UTILS
-    private Input _inp;
+    private InputMonitor _inputMonitor;
 
     // MODELS & CHARACTERS
     private SkinModelLoader _skinModelLoader; // does the work of loading our characters                
@@ -42,7 +42,6 @@ public class Game1 : Game
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
-        Window.IsBorderless = true;
         Content.RootDirectory = "Content";
     }
 
@@ -53,19 +52,14 @@ public class Game1 : Game
         _graphics.IsFullScreen = false;
         _graphics.PreferredDepthStencilFormat = DepthFormat.None;
         _graphics.ApplyChanges();
-        Window.Position = new Point(0, 0);
         _gpu = GraphicsDevice;
 
         var pp = _gpu.PresentationParameters;
         _spriteBatch = new SpriteBatch(_gpu);
         _mainTarget = new RenderTarget2D(_gpu, SCREEN_WIDTH, SCREEN_HEIGHT, false, pp.BackBufferFormat, DepthFormat.Depth24);
         _desktopRect = new Rectangle(0, 0, pp.BackBufferWidth, pp.BackBufferHeight);
-        //new Rectangle(0, 0, _screenW, _screenH);
-
-        // INPUT
-        _inp = new Input(pp, _mainTarget);
-        // INIT 3D             
-        _cam = new Camera(_gpu, Vector3.Up, _inp);
+        _inputMonitor = new InputMonitor();
+        _camera = new Camera(_gpu, Vector3.Up, _inputMonitor);
         _hero = new SkinModel[3];
 
         base.Initialize();
@@ -76,7 +70,7 @@ public class Game1 : Game
         //Content.Load<SpriteFont>("Font");
 
         // { S K I N - M O D E L   L O A D  ----------------------------------------
-        _skinFx = new SkinFx(Content, _cam, "SkinEffect"); // skin effect parameter controls     
+        _skinFx = new SkinFx(Content, _camera, "SkinEffect"); // skin effect parameter controls     
         _skinModelLoader = new SkinModelLoader(Content, _gpu); // need for: runtime load FBX skinned model animations
         _skinModelLoader.SetDefaultOptions(0.1f, "default_gray"); // pad the animation a bit for smooth looping, set a debug texture (if no texture on a mesh)   
 
@@ -90,7 +84,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        _inp.Update();
+        _inputMonitor.Update();
         if (_init)
         {
             // INITIALIZES STARTING ANIMATIONS, CHARACTERS, AND LEVEL (for whatever level we're on) ____________________________ 
@@ -98,9 +92,9 @@ public class Game1 : Game
             _init = false;
         }
 
-        if (_inp.back_down || _inp.KeyDown(Keys.Escape)) Exit(); // change to menu for exit later
+        if (_inputMonitor.KeyDown(Keys.Escape)) Exit(); // change to menu for exit later
 
-        _cam.UpdatePlayerCam(_heroPos);
+        _camera.UpdatePlayerCam(_heroPos);
         _hero[IDLE].Update(gameTime);
         //hero[WALK].Update(gameTime);
         //hero[RUN].Update(gameTime);
@@ -109,7 +103,7 @@ public class Game1 : Game
     }
 
 
-    void Set3DStates()
+    private void Set3DStates()
     {
         _gpu.BlendState = BlendState.NonPremultiplied;
         _gpu.DepthStencilState = DepthStencilState.Default;
@@ -137,7 +131,7 @@ public class Game1 : Game
             _skinFx.World = _mtxHeroRotate * Matrix.CreateTranslation(_heroPos); // ***MUST DO THIS BEFORE: SET DRAW PARAMS***
             // (If we wanted, we could swap out a shirt or something by setting skinFx.texture = ...)
             // TO DO: set up a DrawMesh that takes a custom transforms list for animation blending
-            kid.DrawMesh(i, _cam, _skinFx.World, false);
+            kid.DrawMesh(i, _camera, _skinFx.World, false);
         }
 
         //RENDER SHINY TRANSPARENT STUFF(eyes )
@@ -152,7 +146,7 @@ public class Game1 : Game
             _skinFx.SetDiffuseCol(Color.Blue.ToVector4());
             _skinFx.SetSpecularCol(new Vector3(100f, 100f, 100f));
             // TO DO: custom DrawMesh that takes a custom blendTransform
-            _hero[IDLE].DrawMesh(i, _cam, _skinFx.World, false);
+            _hero[IDLE].DrawMesh(i, _camera, _skinFx.World, false);
             _skinFx.Alpha = oldAlpha;
         }
 

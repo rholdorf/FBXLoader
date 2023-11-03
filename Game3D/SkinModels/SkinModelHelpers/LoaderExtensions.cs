@@ -103,12 +103,12 @@ namespace Game3D.SkinModels.SkinModelHelpers
         public static string ToStringTrimed(this Vector3D v) {
             var d = "+0.000;-0.000"; // "0.00";
             var pamt = 8;
-            return (v.X.ToString(d).PadRight(pamt) + ", " + v.Y.ToString(d).PadRight(pamt) + ", " + v.Z.ToString(d).PadRight(pamt));
+            return v.X.ToString(d).PadRight(pamt) + ", " + v.Y.ToString(d).PadRight(pamt) + ", " + v.Z.ToString(d).PadRight(pamt);
         }
         public static string ToStringTrimed(this Quaternion q) {
             var d = "+0.000;-0.000"; // "0.00";
             var pamt = 8;
-            return (q.X.ToString(d).PadRight(pamt) + ", " + q.Y.ToString(d).PadRight(pamt) + ", " + q.Z.ToString(d).PadRight(pamt) + "w " + q.W.ToString(d).PadRight(pamt));
+            return q.X.ToString(d).PadRight(pamt) + ", " + q.Y.ToString(d).PadRight(pamt) + ", " + q.Z.ToString(d).PadRight(pamt) + "w " + q.W.ToString(d).PadRight(pamt);
         }
 
         // SRT INFO TO STRING (for Assimp Matrix4x4)

@@ -809,7 +809,7 @@ internal class SkinModelLoader
                 v[i].Tangent = tangent;
 
                 // Calculate handedness
-                var w = (Vector3.Dot(Vector3.Cross(n, t), tan2[i]) < 0.0F) ? -1.0F : 1.0F;
+                var w = Vector3.Dot(Vector3.Cross(n, t), tan2[i]) < 0.0F ? -1.0F : 1.0F;
                 Debug.Assert(LoaderExtensions.IsFinite(w), "Bad handedness!");
 
                 // Calculate the bitangent

@@ -78,7 +78,7 @@ namespace Game3D.SkinModels
         /// <summary> What to do at a certain animation time. </summary>
         private void AnimationTimeLogic(GameTime gameTime)
         {
-            _currentAnimFrameTime = ((float)(gameTime.TotalGameTime.TotalSeconds) - _timeStart); // *.1f; // if we want to purposely slow it for testing
+            _currentAnimFrameTime = (float)gameTime.TotalGameTime.TotalSeconds - _timeStart; // *.1f; // if we want to purposely slow it for testing
             var animTotalDuration = (float)Animations[_currentAnim].DurationInSeconds + (float)Animations[_currentAnim].DurationInSecondsAdded; // add extra for looping
 
             // if we need to see a single frame; let us override the current frame
@@ -93,7 +93,7 @@ namespace Game3D.SkinModels
             {
                 // LOOP ANIMATION                
                 _currentAnimFrameTime -= animTotalDuration; // loop back to start
-                _timeStart = (float)(gameTime.TotalGameTime.TotalSeconds); // reset startTime
+                _timeStart = (float)gameTime.TotalGameTime.TotalSeconds; // reset startTime
             }
         }
 

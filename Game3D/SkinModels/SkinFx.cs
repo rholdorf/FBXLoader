@@ -58,7 +58,7 @@ internal class SkinFx
     /// <summary> Sets an array of skinning bone transform matrices. </summary>
     public void SetBoneTransforms(Matrix[] boneTransforms)
     {
-        if ((boneTransforms == null) || (boneTransforms.Length == 0)) throw new ArgumentNullException("boneTransforms");
+        if (boneTransforms == null || boneTransforms.Length == 0) throw new ArgumentNullException("boneTransforms");
         if (boneTransforms.Length > MAX_BONES) throw new ArgumentException();
         Fx.Parameters["Bones"].SetValue(boneTransforms);
     }
@@ -164,7 +164,7 @@ internal class SkinFx
 
     public void SetDrawParams(Camera cam, Texture2D texture = null, Texture2D normalMapTex = null, Texture2D specularTex = null)
     {
-        Matrix.Multiply(ref World, ref cam.view, out WorldView); // (used with fog)
+        Matrix.Multiply(ref World, ref cam.View, out WorldView); // (used with fog)
         Matrix worldInverse, worldInverseTranspose;
         Matrix.Invert(ref World, out worldInverse);
         Matrix.Transpose(ref worldInverse, out worldInverseTranspose);
@@ -178,8 +178,8 @@ internal class SkinFx
         emissive.Y = (EmissiveCol.Y + AmbientCol.Y * DiffuseCol.Y) * Alpha;
         emissive.Z = (EmissiveCol.Z + AmbientCol.Z * DiffuseCol.Z) * Alpha;
         Fx.Parameters["World"].SetValue(World);
-        Fx.Parameters["WorldViewProj"].SetValue(World * cam.view_proj);
-        Fx.Parameters["CamPos"].SetValue(cam.pos);
+        Fx.Parameters["WorldViewProj"].SetValue(World * cam.ViewProj);
+        Fx.Parameters["CamPos"].SetValue(cam.Pos);
         if (texture != null)
             Fx.Parameters["TexDiffuse"].SetValue(texture);
         else
