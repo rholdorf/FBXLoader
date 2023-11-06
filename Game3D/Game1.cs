@@ -53,11 +53,12 @@ public class Game1 : Game
         _graphics.PreferredDepthStencilFormat = DepthFormat.None;
         _graphics.ApplyChanges();
         _gpu = GraphicsDevice;
-
-        var pp = _gpu.PresentationParameters;
         _spriteBatch = new SpriteBatch(_gpu);
+        
+        var pp = _gpu.PresentationParameters;
         _mainTarget = new RenderTarget2D(_gpu, SCREEN_WIDTH, SCREEN_HEIGHT, false, pp.BackBufferFormat, DepthFormat.Depth24);
         _desktopRect = new Rectangle(0, 0, pp.BackBufferWidth, pp.BackBufferHeight);
+        
         _inputMonitor = new InputMonitor();
         _camera = new Camera(_gpu, Vector3.Up, _inputMonitor);
         _hero = new SkinModel[3];
@@ -117,10 +118,8 @@ public class Game1 : Game
 
         Set3DStates();
 
-        //hero[IDLE].Draw(cam, skinFx.world);  // normal way
-
-        // RENDER CHARACTER                    // specialized way
         var kid = _hero[IDLE];
+
         for (var i = 0; i < kid.Meshes.Length; i++)
         {
             var mesh = kid.Meshes[i];

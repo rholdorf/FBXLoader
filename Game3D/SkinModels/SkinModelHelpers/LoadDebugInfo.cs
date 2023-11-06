@@ -381,7 +381,7 @@ namespace Game3D.SkinModels.SkinModelHelpers
                     {
                         var tindex = t[j].TextureIndex;
                         var toperation = t[j].Operation;
-                        var ttype = t[j].TextureType.ToString();
+                        var ttype = Enum.GetName(t[j].TextureType);
                         var tfilepath = t[j].FilePath;
                         // J matches up to the texture coordinate channel uv count it looks like.
                         Console.WriteLine("    Texture[" + j + "] " + "   Index:" + tindex + "   Type: " + ttype + "   Operation: " + toperation + "   Filepath: " + tfilepath);
@@ -436,29 +436,19 @@ namespace Game3D.SkinModels.SkinModelHelpers
 
         private void MinimalInfo(SkinModel model, string filePath)
         {
-            Console.WriteLine("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            Console.WriteLine("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            Console.WriteLine();
-            Console.WriteLine("Model");
-            Console.WriteLine($"{_ld.GetFileName(filePath, true)}  Loaded");
-            Console.WriteLine();
-            Console.WriteLine("Model sceneRootNodeOfTree's Node Name:     " + model.RootNodeOfTree.Name);
-            Console.WriteLine("Model number of animaton: " + model.Animations.Count);
-            Console.WriteLine("Model number of meshes:   " + model.Meshes.Length);
+            Console.WriteLine($"Model [{_ld.GetFileName(filePath, true)}]");
+            Console.WriteLine($"    sceneRootNodeOfTree's Node Name: {model.RootNodeOfTree.Name}");
+            Console.WriteLine($"    number of animation: {model.Animations.Count}");
+            Console.WriteLine($"    number of meshes: {model.Meshes.Length}");
             for (var mmLoop = 0; mmLoop < model.Meshes.Length; mmLoop++)
             {
                 var rmMesh = model.Meshes[mmLoop];
-                Console.WriteLine("Model mesh #" + mmLoop + " of  " + model.Meshes.Length + "   Name: " + rmMesh.Name + "   MaterialIndex: " + rmMesh.MaterialIndex + "  MaterialIndexName: " + rmMesh.MaterialName + "  Bones.Count " + model.Meshes[mmLoop].MeshBones.Count() + " ([0] is a generated bone to the mesh)");
-                if (rmMesh.TexDiffuse != null) Console.WriteLine("texture: " + rmMesh.TexName);
-                if (rmMesh.TexNormalMap != null) Console.WriteLine("textureNormalMap: " + rmMesh.TexNormMapName);
-                // May add more texture types later in which case we may want to update this for debugging if needed
-                //if (rmMesh.textureHeightMap != null) Console.WriteLine("textureHeightMap: " + rmMesh.textureHeightMapName);
+                Console.WriteLine($"    mesh #{mmLoop}/{model.Meshes.Length-1} {rmMesh.Name} bones: {model.Meshes[mmLoop].MeshBones.Length} materialIndex: {rmMesh.MaterialIndex} materialIndexName: {rmMesh.MaterialName}");
+                if (rmMesh.TexDiffuse != null) 
+                    Console.WriteLine($"        texture: {rmMesh.TexName}");
+                if (rmMesh.TexNormalMap != null) 
+                    Console.WriteLine($"        textureNormalMap: {rmMesh.TexNormMapName}");
             }
-
-            Console.WriteLine();
-            Console.WriteLine("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            Console.WriteLine("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            Console.WriteLine("\n");
         }
 
         public static void CreatingRootInfo(string str1)
