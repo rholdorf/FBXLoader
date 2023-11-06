@@ -10,7 +10,7 @@ internal class Camera
 {
     private const float CAM_HEIGHT = 12; // default up-distance from player's root position (depends on character size - 80 up in y direction to look at head)
     private const float HEAD_OFFSET = 12;
-    private const float FAR_PLANE = 2000; // farthest camera can see (clip out things further away) 
+    private const float FAR_PLANE = 20000; // farthest camera can see (clip out things further away) 
     public Vector3 Pos; // camera position, target to look at
     private Vector3 _target; // camera position, target to look at
     public Matrix View; // viewing/projection transforms used to transform world vertices to screen coordinates relative to camera
@@ -19,7 +19,7 @@ internal class Camera
     public Vector3 Up; // up direction for camera and world geometry (may depend on imported geometry's up direction [ie: is up -1 or 1 in y direction] 
     private float _currentAngle; // player-relative angle offset of camera (will explain more later)
     private float _angleVelocity; // speed of camera rotation
-    private float _radius = 100.0f; // distance of camera from player (to look at)
+    private float _radius = 4000.0f; // distance of camera from player (to look at)
     private Vector3 _unitDirection; // direction of camera (normalized to distance of 1 unit) 
     private readonly InputMonitor _inp; // allow access to input class so can control camera from this class if want to
 
@@ -27,7 +27,7 @@ internal class Camera
     {
         Up = upDirection;
         _inp = inputMonitor;
-        Pos = new Vector3(20, 12, -90);
+        Pos = new Vector3(2000, 1002, -90);
         _target = Vector3.Zero;
         View = Matrix.CreateLookAt(Pos, _target, Up);
         _proj = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4, gpu.Viewport.AspectRatio, 1.0f, FAR_PLANE);
@@ -68,6 +68,16 @@ internal class Camera
             if (_angleVelocity > Maf.RADIANS_1) _angleVelocity = Maf.RADIANS_1; // ANALOG ROTATE CAMERA
         }
 
+        if (_inp.KeyDown(Keys.OemPlus))
+        {
+            Pos.X -= 10f;
+        }
+        
+        if (_inp.KeyDown(Keys.OemMinus))
+        {
+            Pos.X += 10f;
+        }        
+
         // G E T   N E W   R O T A T I O N   A N G L E  ( and update camera position )
         _radius = (float)Math.Sqrt(x1 * x1 + z1 * z1);
         if (_angleVelocity != 0.0f)
@@ -81,7 +91,7 @@ internal class Camera
         }
 
         // C A M E R A   Z O O M   (move camera toward player if too far away)            
-        _unitDirection = forward;
+        /*_unitDirection = forward;
         _unitDirection.Normalize();
         var adjust = 0.02f;
         if (_radius is > 400 or < 40) adjust = 1f;
@@ -90,7 +100,7 @@ internal class Camera
 
         _target.X += (heroPos.X - _target.X) * 0.1f;
         _target.Y += (heroPos.Y + HEAD_OFFSET - _target.Y) * 0.1f;
-        _target.Z += (heroPos.Z - _target.Z) * 0.1f;
+        _target.Z += (heroPos.Z - _target.Z) * 0.1f;*/
         UpdateTarget(_target);
     }
 }

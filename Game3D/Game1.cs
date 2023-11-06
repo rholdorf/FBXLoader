@@ -76,7 +76,8 @@ public class Game1 : Game
         _skinModelLoader.SetDefaultOptions(0.1f, "default_gray"); // pad the animation a bit for smooth looping, set a debug texture (if no texture on a mesh)   
 
         // load animation (custom settings, size = 35%) 
-        _hero[IDLE] = _skinModelLoader.Load("Kid/kid_idle.fbx", "Kid", true, 3, _skinFx, rescale: 0.35f);
+        //_hero[IDLE] = _skinModelLoader.Load("Kid/kid_idle.fbx", "Kid", true, 3, _skinFx, rescale: 0.35f);
+        _hero[IDLE] = _skinModelLoader.Load("Maria/Standing Idle.fbx", "Maria", true, 3, _skinFx);
 
         // I n i t   P l a y e r:
         _mtxHeroRotate = Matrix.CreateFromYawPitchRoll(MathHelper.Pi, 0, 0); // let's have the character facing the camera at first          
