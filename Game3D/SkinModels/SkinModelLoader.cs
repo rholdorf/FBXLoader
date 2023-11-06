@@ -88,10 +88,7 @@ internal class SkinModelLoader
     {
         AddedLoopingDuration = addToLoopDuration;
         DebugTex = Content.Load<Texture2D>(setADebugTexture);
-        if (setADebugTexture.Length > 0)
-            UseDebugTex = true;
-        else
-            UseDebugTex = false;
+        UseDebugTex = setADebugTexture.Length > 0;
     }
 
     public SkinModel Load(string filePathOrFileName, string altTextureDirectory, SkinFx skinFx, float rescale = 1f)
