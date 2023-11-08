@@ -34,15 +34,15 @@ internal class SkinFx
     public SkinFx(ContentManager content, Camera cam, string fxFilename, bool enableFog = false)
     {
         _lights = new DirectionLight[3];
-        for (var i = 0; i < 3; i++) _lights[i] = new DirectionLight();
+        for (var i = 0; i < 3; i++) 
+            _lights[i] = new DirectionLight();
+        
         _cam = cam;
         Fx = content.Load<Effect>(fxFilename);
         _defaultTex = content.Load<Texture2D>("default_texture");
         var identityBones = new Matrix[MAX_BONES];
         for (var i = 0; i < MAX_BONES; i++)
-        {
             identityBones[i] = Matrix.Identity;
-        }
 
         SetBoneTransforms(identityBones);
         Fx.Parameters["TexDiffuse"].SetValue(_defaultTex);
@@ -52,7 +52,8 @@ internal class SkinFx
         Fx.Parameters["SpecularPower"].SetValue(SpecularPow);
 
         SetDefaultLighting();
-        if (enableFog) ToggleFog();
+        if (enableFog) 
+            ToggleFog();
     }
 
     /// <summary> Sets an array of skinning bone transform matrices. </summary>
@@ -89,7 +90,9 @@ internal class SkinFx
 
     public void SetDirectionalLight(int index, Vector3 direction, Color diffuseColor, Color specularColor)
     {
-        if (index >= 3) return;
+        if (index >= 3) 
+            return;
+        
         _lights[index].Direction = direction;
         _lights[index].DiffuseColor = diffuseColor.ToVector3();
         _lights[index].SpecularColor = specularColor.ToVector3();

@@ -18,14 +18,19 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Game3D.SkinModels
 {
-    class SkinModel
+    internal class SkinModel
     {
         private readonly GraphicsDevice _gpu;
         private readonly SkinFx _skinFx; // using to control SkinEffect             
         private const int MAX_BONES = 180;
         private readonly Matrix[] _skinShaderMatrices; // these are the real final bone matrices they end up on the shader
         public SkinMesh[] Meshes;
-        public ModelNode RootNodeOfTree; // actual model root node - base node of the model - from here we can locate any node in the chain        
+        public ModelNode RootNodeOfTree; // actual model root node - base node of the model - from here we can locate any node in the chain
+        
+        /// <summary>
+        /// Path and filename for the model, beginning at the Contents folder.
+        /// </summary>
+        public string RelativeFilename { get; set; }
 
         // animations
         public readonly List<RigAnimation> Animations = new();
@@ -54,7 +59,9 @@ namespace Game3D.SkinModels
 
         public void Update(GameTime gameTime)
         {
-            if (_animationRunning) UpdateModelAnimations(gameTime); // determine local transforms for animation
+            if (_animationRunning) 
+                UpdateModelAnimations(gameTime); // determine local transforms for animation
+            
             UpdateNodes(RootNodeOfTree); // update the skeleton 
             UpdateMeshAnims(); // update any regular mesh animations
         }
@@ -273,23 +280,23 @@ namespace Game3D.SkinModels
                 while (animTime > durationSecs) // If the requested play-time is past the end of the animation, loop it (ie: time = 20 but duration = 16 so time becomes 4)
                     animTime -= durationSecs;
 
-                Quaternion q1 = nodeAnim.Qrot[0], q2 = q1; // init rot as entry 0 for both keys (init may be needed cuz conditional value assignment can upset compiler)
+                Quaternion q1 = nodeAnim.Quaternions[0], q2 = q1; // init rot as entry 0 for both keys (init may be needed cuz conditional value assignment can upset compiler)
                 Vector3 p1 = nodeAnim.Position[0], p2 = p1; // " pos
                 Vector3 s1 = nodeAnim.Scale[0], s2 = s1; // " scale
-                double tq1 = nodeAnim.QrotTime[0], tq2 = tq1; // " rot-time
+                double tq1 = nodeAnim.QuaternionRotationTime[0], tq2 = tq1; // " rot-time
                 double tp1 = nodeAnim.PositionTime[0], tp2 = tp1; // " pos-time
                 double ts1 = nodeAnim.ScaleTime[0], ts2 = ts1; // " scale-time
 
                 // GET ROTATION KEYFRAMES
-                var endTIndex = nodeAnim.QrotTime.Count - 1; // final time's index (starting with qrot cuz we do it first - we'll cahnge this variable for pos and scale)
-                var endIndex = nodeAnim.Qrot.Count - 1; // final rot frame
-                var endTime = nodeAnim.QrotTime[endTIndex]; // get final rotation-time
+                var endTIndex = nodeAnim.QuaternionRotationTime.Count - 1; // final time's index
+                var endIndex = nodeAnim.Quaternions.Count - 1; // final rotation frame
+                var endTime = nodeAnim.QuaternionRotationTime[endTIndex]; // get final rotation-time
                 if (animTime > endTime)
                 {
                     // if animTime is past final rotation-time: Set to interpolate between last and first frames (for animation-loop)
                     tq1 = endTime; // key 1 time is last keyframe and time 2 is time taken after to get to frame 0 (see below) 
                     tq2 += durationSecs; // total duration accounting for time to loop from last frame to frame 0 (with DurationInSecondsAdded)
-                    q1 = nodeAnim.Qrot[endIndex]; // get final quaternion (count-1),       NOTE: q2 already set above (key frame 0)                                                                      
+                    q1 = nodeAnim.Quaternions[endIndex]; // get final quaternion (count-1),       NOTE: q2 already set above (key frame 0)                                                                      
                 }
                 else
                 {
@@ -297,23 +304,23 @@ namespace Game3D.SkinModels
                     for (; frame2 > -1; frame2--)
                     {
                         // loop from last index to 0 (until find correct place on timeline):
-                        var t = nodeAnim.QrotTime[frame2]; // what's the time at this frame?
+                        var t = nodeAnim.QuaternionRotationTime[frame2]; // what's the time at this frame?
                         if (t < animTime) break; // if the current_time > the frame time then we've found the spot we're looking for (break out)                                                    
                     }
 
                     if (frame2 < endIndex) frame2++; // at this point the frame2 is 1 less than what we're looking for so add 1
-                    q2 = nodeAnim.Qrot[frame2];
-                    tq2 = nodeAnim.QrotTime[frame2];
+                    q2 = nodeAnim.Quaternions[frame2];
+                    tq2 = nodeAnim.QuaternionRotationTime[frame2];
                     frame1 = frame2 - 1;
                     if (frame1 < 0)
                     {
                         frame1 = endIndex; // loop frame1 to last frame
-                        tq1 = nodeAnim.QrotTime[frame1] - durationSecs; // Using: frame2time - frame1time, so we need time1 to be less _ thus: subtract durationSecs to fix it
+                        tq1 = nodeAnim.QuaternionRotationTime[frame1] - durationSecs; // Using: frame2time - frame1time, so we need time1 to be less _ thus: subtract durationSecs to fix it
                     }
                     else
-                        tq1 = nodeAnim.QrotTime[frame1]; // get time1 
+                        tq1 = nodeAnim.QuaternionRotationTime[frame1]; // get time1 
 
-                    q1 = nodeAnim.Qrot[frame1];
+                    q1 = nodeAnim.Quaternions[frame1];
                 }
 
                 // GET POSITION KEY FRAMES
@@ -329,7 +336,7 @@ namespace Game3D.SkinModels
                 }
                 else
                 {
-                    int frame2 = endIndex, frame1;
+                    var frame2 = endIndex;
                     for (; frame2 > -1; frame2--)
                     {
                         // loop from last index to 0 (until find correct place on timeline):
@@ -340,7 +347,7 @@ namespace Game3D.SkinModels
                     if (frame2 < endIndex) frame2++; // at this point the frame2 is 1 less than what we're looking for so add 1
                     p2 = nodeAnim.Position[frame2];
                     tp2 = nodeAnim.PositionTime[frame2];
-                    frame1 = frame2 - 1;
+                    var frame1 = frame2 - 1;
                     if (frame1 < 0)
                     {
                         frame1 = endIndex; // loop frame1 to last frame
@@ -365,7 +372,7 @@ namespace Game3D.SkinModels
                 }
                 else
                 {
-                    int frame2 = endIndex, frame1;
+                    var frame2 = endIndex;
                     for (; frame2 > -1; frame2--)
                     {
                         // loop from last index to 0 (until find correct place on timeline):
@@ -376,7 +383,7 @@ namespace Game3D.SkinModels
                     if (frame2 < endIndex) frame2++; // at this point the frame2 is 1 less than what we're looking for so add 1
                     s2 = nodeAnim.Scale[frame2];
                     ts2 = nodeAnim.ScaleTime[frame2];
-                    frame1 = frame2 - 1;
+                    var frame1 = frame2 - 1;
                     if (frame1 < 0)
                     {
                         frame1 = endIndex; // loop frame1 to last frame
@@ -422,29 +429,24 @@ namespace Game3D.SkinModels
             // in model tick time
             public readonly List<double> PositionTime = new();
             public readonly List<double> ScaleTime = new();
-            public readonly List<double> QrotTime = new();
+            public readonly List<double> QuaternionRotationTime = new();
             public readonly List<Vector3> Position = new();
             public readonly List<Vector3> Scale = new();
-            public readonly List<Quaternion> Qrot = new();
+            public readonly List<Quaternion> Quaternions = new();
         } 
     } 
 
     public struct VertexNormMapSkin : IVertexType
     {
         public Vector3 Pos, Norm;
-#if USING_COLORED_VERTICES
-        public Vector4 color;
-#endif
+
         public Vector2 Uv;
         public Vector3 Tangent;
         public Vector3 BiTangent;
         public Vector4 BlendIndices, BlendWeights;
 
-        public static VertexDeclaration VertexDeclaration = new(
+        public static readonly VertexDeclaration VertexDeclaration = new(
             new VertexElement(BYT.Ini(3), VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-#if USING_COLORED_VERTICES
-              new VertexElement(BYT.Ini(4), VertexElementFormat.Vector4, VertexElementUsage.Color, 0),
-#endif
             new VertexElement(BYT.Off(3), VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
             new VertexElement(BYT.Off(2), VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0),
             new VertexElement(BYT.Off(3), VertexElementFormat.Vector3, VertexElementUsage.Normal, 1),
@@ -453,10 +455,7 @@ namespace Game3D.SkinModels
             new VertexElement(BYT.Off(4), VertexElementFormat.Vector4, VertexElementUsage.BlendWeight, 0)
         );
 
-        VertexDeclaration IVertexType.VertexDeclaration
-        {
-            get { return VertexDeclaration; }
-        }
+        VertexDeclaration IVertexType.VertexDeclaration => VertexDeclaration;
     }
 
     // B O F F (adjusts byte offset for each entry in a vertex declaration)

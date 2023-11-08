@@ -14,6 +14,8 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private Camera _camera;
 
+    //private Basic3dExampleCamera _camera;
+
     // RECTANGLES
     private Rectangle _desktopRect;
 
@@ -61,6 +63,7 @@ public class Game1 : Game
         
         _inputMonitor = new InputMonitor();
         _camera = new Camera(_gpu, Vector3.Up, _inputMonitor);
+        
         _hero = new SkinModel[3];
 
         base.Initialize();
@@ -97,6 +100,7 @@ public class Game1 : Game
         if (_inputMonitor.KeyDown(Keys.Escape)) Exit(); // change to menu for exit later
 
         _camera.UpdatePlayerCam(_heroPos);
+      
         _hero[IDLE].Update(gameTime);
         //hero[WALK].Update(gameTime);
         //hero[RUN].Update(gameTime);
@@ -133,6 +137,8 @@ public class Game1 : Game
             // TO DO: set up a DrawMesh that takes a custom transforms list for animation blending
             kid.DrawMesh(i, _camera, _skinFx.World, false);
         }
+        
+        
 
         //RENDER SHINY TRANSPARENT STUFF(eyes )
         _skinFx.SetShineAmplify(100f);

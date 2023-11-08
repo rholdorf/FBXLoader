@@ -36,7 +36,7 @@ internal class SkinModelLoader
     public bool ConsoleInfo = false; // from here down is mostly run time console info.
     public bool MatrixInfo = false;
     public bool MeshBoneCreationInfo = false;
-    public bool MaterialInfo = false;
+    public bool MaterialInfo = true;
     public bool FlatBoneInfo = false;
     public bool NodeTreeInfo = false;
     public bool AnimationInfo = false;
@@ -116,7 +116,7 @@ internal class SkinModelLoader
     {
         FilePathName = filePathOrFileName;
         FilePathNameWithoutExtension = Path.GetFileNameWithoutExtension(filePathOrFileName);
-        var s = Path.Combine(Path.Combine(Environment.CurrentDirectory, "Content"), filePathOrFileName); // rem: set FBX to "copy-to" and remove any file processing properties
+        var s = Path.Combine(Path.Combine(Environment.CurrentDirectory, "Content"), filePathOrFileName); // rem: set FBX to "copy" and remove any file processing properties
         if (File.Exists(s) == false)
         {
             if (FilePathDebug)
@@ -211,7 +211,8 @@ internal class SkinModelLoader
     private SkinModel CreateModel(string fileNom, SkinFx skinFx)
     {
         var model = new SkinModel(_graphicsDevice, skinFx); // create model
-
+        model.RelativeFilename = FilePathName;
+        
         CreateRootNode(model, Scene); // prep to build model's tree (need root node)
 
         CreateMeshesAndBones(model, Scene, 0); // create the model's meshes and bones
@@ -310,14 +311,10 @@ internal class SkinModelLoader
     /// <summary> Loads textures and sets material values to each model mesh. </summary>
     private void SetupMaterialsAndTextures(SkinModel model, Scene scene)
     {
-        if (MaterialInfo) Console.WriteLine("\n\n@@@SetUpMeshMaterialsAndTextures \n");
-
-        var savedDir = Content.RootDirectory; // store the current Content directory to restore it later
-
-        for (var mi = 0; mi < scene.Meshes.Count; mi++)
+        for (var i = 0; i < scene.Meshes.Count; i++)
         {
             // loop thru scene meshes
-            var sMesh = model.Meshes[mi]; // ref to model-mesh
+            var sMesh = model.Meshes[i]; // ref to model-mesh
             var matIndex = sMesh.MaterialIndex; // we need the material index (for scene)
             var assimpMaterial = scene.Materials[matIndex]; // get the scene's material 
 
@@ -343,127 +340,70 @@ internal class SkinModelLoader
 
             var assimpMaterialTextures = assimpMaterial.GetAllMaterialTextures(); // get the list of textures
 
-            if (MaterialInfo)
-            {
-                Console.WriteLine("\n Mesh Name " + scene.Meshes[mi].Name);
-                Console.WriteLine(" MaterialIndexName: " + sMesh.MaterialName + "  Materials[" + matIndex + "]   get material textures");
-            }
-
-            // Texture types available via assimp are:
-            // None = 0, Diffuse = 1,Specular = 2, Ambient = 3,Emissive = 4, Height = 5,Normals = 6,Shininess = 7,Opacity = 8, Displacement = 9, Lightmap = 10,AmbientOcclusion = 17,Reflection = 11,
-            // BaseColor = 12 /*PBR*/, NormalCamera = 13/*PBR normal map workflow*/,EmissionColor = 14/*PBR emissive*/,Metalness = 15 /*PBR shininess*/  , Roughness = 16, /*PRB*/
             for (var t = 0; t < assimpMaterialTextures.Length; t++)
             {
-                // loop thru textures
-                var tindex = assimpMaterialTextures[t].TextureIndex; // texture index
-                var toperation = assimpMaterialTextures[t].Operation;
-                var ttype = assimpMaterialTextures[t].TextureType.ToString(); // texture type
-                var tfilepath = assimpMaterialTextures[t].FilePath; // original file path I think
-                var tfilename = GetFileName(tfilepath, true); // just file's name                    
+                var textureIndex = assimpMaterialTextures[t].TextureIndex;
+                var textureOperation = assimpMaterialTextures[t].Operation;
+                var textureType = assimpMaterialTextures[t].TextureType;
+                var relativeFilename = assimpMaterialTextures[t].FilePath;
+                var xnbFileName = GetXnbFileName(relativeFilename);                    
 
-                // PREPARE CORRECT LOADING DIRECTORY (if texture file can be found)
-                var tfullfilepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Content.RootDirectory, tfilename + ".xnb"); // expected file
-                var tfileexists = File.Exists(tfullfilepath); // is there an xnb? 
-                if (tfileexists == false)
-                {
-                    tfullfilepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Content.RootDirectory, FilePathNameWithoutExtension, tfilename + ".xnb");
-                    tfileexists = File.Exists(tfullfilepath); // how about this one? 
-                    if (tfileexists)
-                    {
-                        Content.RootDirectory = Path.Combine("Content", FilePathNameWithoutExtension);
-                    } // switch Content's load directory
-                    else
-                    {
-                        tfullfilepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Content.RootDirectory, AltDirectory, tfilename + ".xnb"); // in alternative directory?
-                        tfileexists = File.Exists(tfullfilepath);
-                        if (tfileexists)
-                        {
-                            Content.RootDirectory = Path.Combine("Content", AltDirectory);
-                        } // switch Content's load directory 
-                    }
-                }
+                // assumes the model is in its specific directory, under "Contents" AND its textures are below it
+                var modelDirectory = Path.GetDirectoryName(model.RelativeFilename);
+                if (modelDirectory != null)
+                    xnbFileName = Path.Combine(modelDirectory, xnbFileName);
 
-                // debug info if needed: 
-                if (MaterialInfo)
-                {
-                    Console.WriteLine("      Material[" + matIndex + "].Texture[" + t + "] of " + assimpMaterialTextures.Length + "   Index: " + tindex.ToString().PadRight(5) + "   Type: " + ttype.PadRight(15) + "   Operation: " + toperation.ToString().PadRight(15) + " Name: " + tfilename.PadRight(15) + "  ExistsInContent: " + tfileexists);
-                    Console.WriteLine("      Filepath: " + tfilepath.PadRight(15));
-                }
+                var xnbFullFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Content.RootDirectory, xnbFileName);
 
-                // L O A D   T E X T U R E S
-                if (ttype == "Diffuse")
-                {
-                    if (MaterialInfo) Console.WriteLine("      ....Type...Diffuse");
-                    model.Meshes[mi].TexName = tfilename; // Get diffuse tex name
-                    if (Content != null && tfileexists)
-                    {
-                        // If exists, load it: 
-                        model.Meshes[mi].TexDiffuse = Content.Load<Texture2D>(tfilename);
-                        if (MaterialInfo) Console.WriteLine("      ....Type...Diffuse Texture loaded: ... " + tfilename);
-                    }
-                    else
-                        Console.WriteLine("      DID NOT LOAD....: " + tfilename);
-                }
+                if (!File.Exists(xnbFullFilePath))
+                    throw new FileNotFoundException(null, xnbFullFilePath);
 
-                if (ttype == "Normals")
-                {
-                    if (MaterialInfo) Console.WriteLine("      ....Type...Normals");
-                    model.Meshes[mi].TexNormMapName = tfilename; // Get normalMap tex name
-                    if (Content != null && tfileexists)
-                    {
-                        // If exists, load it:
-                        model.Meshes[mi].TexNormalMap = Content.Load<Texture2D>(tfilename);
-                        if (MaterialInfo) Console.WriteLine("      ....Type...Normal Map Texture loaded: ... " + tfilename);
-                    }
-                    else
-                        Console.WriteLine("      DID NOT LOAD....: " + tfilename);
-                }
-
-                if (ttype == "Specular")
-                {
-                    if (MaterialInfo) Console.WriteLine("      ....Type...Specular");
-                    model.Meshes[mi].TexSpecularName = tfilename; // Get specularMap tex name
-                    if (Content != null && tfileexists)
-                    {
-                        // If exists, load it:
-                        model.Meshes[mi].TexSpecular = Content.Load<Texture2D>(tfilename);
-                        if (MaterialInfo) Console.WriteLine("      ....Type...Specular Map Texture loaded: ... " + tfilename);
-                    }
-                    else
-                        Console.WriteLine("      DID NOT LOAD....: " + tfilename);
-                }
-
-                if (ttype == "Height")
-                {
-                    if (MaterialInfo) Console.WriteLine("      ....Type...Height");
-                    model.Meshes[mi].TexHeightMapName = tfilename; // Get height tex name
-                    if (Content != null && tfileexists)
-                    {
-                        // If exists, load it: 
-                        model.Meshes[mi].TexHeightMap = Content.Load<Texture2D>(tfilename);
-                        if (MaterialInfo) Console.WriteLine("      ....Type...Height Texture loaded: ... " + tfilename);
-                    }
-                    else
-                        Console.WriteLine("      DID NOT LOAD....: " + tfilename);
-                }
-
-                if (ttype == "Reflection")
-                {
-                    if (MaterialInfo) Console.WriteLine("      ....Type...Reflection");
-                    model.Meshes[mi].TexReflectionMapName = tfilename; // Get reflectionMap tex name
-                    if (Content != null && tfileexists)
-                    {
-                        // If exists, load it:
-                        model.Meshes[mi].TexReflectionMap = Content.Load<Texture2D>(tfilename);
-                        if (MaterialInfo) Console.WriteLine("      ....Type...Reflection Map Texture loaded: ... " + tfilename);
-                    }
-                    else
-                        Console.WriteLine("      DID NOT LOAD....: " + tfilename);
-                }
+                //xnbFileName = GetFilenameWithoutExtension(xnbFileName);
+                //LoadTextures(textureType, model, mi, xnbFileName);
             }
         }
+    }
 
-        Content.RootDirectory = savedDir; // done loading - restore to original Content directory
+    private void LoadTextures(TextureType textureType, SkinModel model, int mi, string xnbFileName)
+    {
+        var texture = Content.Load<Texture2D>(xnbFileName);
+        switch (textureType)
+        {
+            case TextureType.Diffuse:
+                model.Meshes[mi].TexName = xnbFileName;
+                model.Meshes[mi].TexDiffuse = texture;
+                break;
+
+            case TextureType.Normals:
+                model.Meshes[mi].TexNormMapName = xnbFileName;
+                model.Meshes[mi].TexNormalMap = texture;
+                break;
+
+            case TextureType.Specular:
+                model.Meshes[mi].TexSpecularName = xnbFileName;
+                model.Meshes[mi].TexSpecular = texture;
+                break;
+
+            case TextureType.Height:
+                model.Meshes[mi].TexHeightMapName = xnbFileName;
+                model.Meshes[mi].TexHeightMap = texture;
+                break;
+
+            case TextureType.Reflection:
+                model.Meshes[mi].TexReflectionMapName = xnbFileName;
+                model.Meshes[mi].TexReflectionMap = texture;
+                break;
+
+            case TextureType.None: break;
+            case TextureType.Ambient: break;
+            case TextureType.Emissive: break;
+            case TextureType.Shininess: break;
+            case TextureType.Opacity: break;
+            case TextureType.Displacement: break;
+            case TextureType.Lightmap: break;
+            case TextureType.Unknown: break;
+            default: throw new ArgumentOutOfRangeException(nameof(textureType), textureType, null);
+        }
     }
 
     /// <summary> Recursively get scene nodes stuff into our model nodes
@@ -493,21 +433,17 @@ internal class SkinModelLoader
         // to be able to affect more than 1 mesh with a bone later when recursing the tree for animation updates. 
         for (var mi = 0; mi < Scene.Meshes.Count; mi++)
         {
-            SkinModel.ModelBone bone;
-            var boneIndexInMesh = 0;
-            if (GetBoneForMesh(model.Meshes[mi], modelNode.Name, out bone, out boneIndexInMesh))
-            {
-                // find the bone that goes with this node name
-                // MARK AS BONE: 
-                modelNode.HasRealBone = true; // yes, we found it in this mesh's bone-list
-                modelNode.IsBoneOnRoute = true; // "                    
-                bone.MeshIndex = mi; // record index of every mesh the bone should affect
-                bone.BoneIndex = boneIndexInMesh; // record index of the bone within each affected mesh's bone-list
-                modelNode.UniqueMeshBones.Add(bone); // add the bone into our flat-list of bones (could be only 1 mesh, could be multiple)
-            }
+            if (!GetBoneForMesh(model.Meshes[mi], modelNode.Name, out var bone, out var boneIndexInMesh)) 
+                continue;
+            // find the bone that goes with this node name
+            // MARK AS BONE: 
+            modelNode.HasRealBone = true; // yes, we found it in this mesh's bone-list
+            modelNode.IsBoneOnRoute = true; // "                    
+            bone.MeshIndex = mi; // record index of every mesh the bone should affect
+            bone.BoneIndex = boneIndexInMesh; // record index of the bone within each affected mesh's bone-list
+            modelNode.UniqueMeshBones.Add(bone); // add the bone into our flat-list of bones (could be only 1 mesh, could be multiple)
         }
 
-        // debug info (if needed)
         if (NodeTreeInfo)
         {
             Info.ShowNodeTreeInfo(tabLevel, curAssimpNode, MatrixInfo, modelNode, model, Scene);
@@ -566,8 +502,8 @@ internal class SkinModelLoader
                 foreach (var keyList in anodeAnimLists.RotationKeys)
                 {
                     var oaq = keyList.Value; // get open-assimp quaternion
-                    nodeAnim.QrotTime.Add(keyList.Time / assimAnim.TicksPerSecond); // add to list: rotation-time: time = keyTime / TicksPerSecond
-                    nodeAnim.Qrot.Add(oaq.ToMg()); // add to list: rotation (monogame compatible quaternion)
+                    nodeAnim.QuaternionRotationTime.Add(keyList.Time / assimAnim.TicksPerSecond); // add to list: rotation-time: time = keyTime / TicksPerSecond
+                    nodeAnim.Quaternions.Add(oaq.ToMg()); // add to list: rotation (monogame compatible quaternion)
                 }
 
                 foreach (var keyList in anodeAnimLists.PositionKeys)
@@ -656,20 +592,7 @@ internal class SkinModelLoader
 
             // A mesh may contain 0 to AI_MAX_NUMBER_OF_COLOR_SETS vertex colors per vertex. NULL if not present. Each array is mNumVertices in size if present. 
             // http://sir-kimmi.de/assimp/lib_html/structai_mesh.html#aa2807c7ba172115203ed16047ad65f9e                
-#if USING_COLORED_VERTICES
-                if (ConsoleInfo) Console.Write("\n" + " Copying Colors...");
-                var c = mesh.VertexColorChannels[mi];             // get color data for this mesh
-                bool hascolors = false;
-                if (mesh.HasVertexColors(mi)) hascolors = true;
-                for (int k = 0; k < mesh.Vertices.Count; k++) {
-                    if (hascolors == false) {
-                        v[k].color = new Vector4(1.0f, 1.0f, 1.0f, 1.0f); 
-                    }
-                    else {
-                        v[k].color = new Vector4(c[k].R, c[k].G, c[k].B, c[k].A);
-                    }
-                }
-#endif
+
 
             // UV's
             if (ConsoleInfo) Console.Write("\n" + " Copying Uv TexCoords...");
@@ -996,6 +919,17 @@ internal class SkinModelLoader
             tpathsplit = f.Split(new[] { '/' });
         s = tpathsplit[tpathsplit.Length - 1];
         return s;
+    }
+
+    private static string GetXnbFileName(string s)
+    {
+        return GetFilenameWithoutExtension(s) + ".xnb";
+    }
+
+    private static string GetFilenameWithoutExtension(string filename)
+    {
+        var extension = Path.GetExtension(filename);
+        return filename[..^extension.Length];        
     }
 
     /// <summary> Gets the named bone in the model mesh </summary>
