@@ -242,18 +242,56 @@ internal class SkinModel
 
         public Vector3 Min, Max, Mid;
 
-        // MESH MATERIAL (add more as needed - like if you want pbr):
-        public Vector4 Ambient = Vector4.One; // minimum light color
-        public Vector4 Diffuse = Vector4.One; // regular material colorization
-        public Vector4 Specular = Vector4.One; // specular highlight color 
-        public Vector4 Emissive = Vector4.One; // amplify a color brightness (not requiring light - similar to ambient really - kind of a glow without light)                
-        public float Opacity = 1.0f; // how opaque or see-through is it?          
-        public float Reflectivity = 0.0f; // strength of reflections
-        public float Shininess = 0.0f; // how much light shines off
-        public float ShineStrength = 1.0f; // probably specular power (can use to narrow & intensifies highlights - ie: more wet or metallic looking)
-        public float BumpScale = 0.0f; // amplify or reduce normal-map effect  
+        /// <summary>
+        /// Minimum light color.
+        /// </summary>
+        public Vector4 Ambient = Vector4.One;
+        
+        /// <summary>
+        /// Regular material colorization.
+        /// </summary>
+        public Vector4 Diffuse = Vector4.One;
+        
+        /// <summary>
+        /// Specular highlight color.
+        /// </summary>
+        public Vector4 Specular = Vector4.One;
+        
+        /// <summary>
+        /// Amplify a color brightness. Not requiring light, similar to ambient really, kind of a glow without light.
+        /// </summary>
+        public Vector4 Emissive = Vector4.One;
+        
+        /// <summary>
+        /// How opaque or see-through is it?
+        /// </summary>
+        public float Opacity = 1.0f;
+        
+        /// <summary>
+        /// Strength of reflections.
+        /// </summary>
+        public float Reflectivity = 0.0f;
+        
+        /// <summary>
+        /// How much light shines off.
+        /// </summary>
+        public float Shininess = 0.0f;
+        
+        /// <summary>
+        /// Probably specular power (can use to narrow and intensifies highlights - ie: more wet or metallic looking).
+        /// </summary>
+        public float ShineStrength = 1.0f;
+        
+        /// <summary>
+        /// Amplify or reduce normal-map effect.
+        /// </summary>
+        public float BumpScale = 0.0f;  
 
-        public bool IsTwoSided = false; // useful for glass and ice
+        /// <summary>
+        /// Useful for glass and ice.
+        /// </summary>
+        public bool IsTwoSided = false;
+        
         //public Vector4 colorTransparent = Vector4.One;  
         //public Vector4 reflective = Vector4.One;
         //public float transparency = 0.0f;
@@ -267,6 +305,9 @@ internal class SkinModel
     /// <summary> All the 'animNodes' are in RigAnimation & the nodes have lists of frames of animations.</summary>
     public class RigAnimation
     {
+        /// <summary>
+        /// Time in seconds for entire animation.
+        /// </summary>
         public double DurationInSeconds; // same in seconds
         public double DurationInSecondsAdded; // added seconds
         public List<AnimNodes> AnimatedNodes; // holds the animated nodes

@@ -49,7 +49,7 @@ public static class LoaderExtensions
     }
 
     // T O   M G  (convert for use with MonoGame) - QUATERNION
-    public static XNA.Quaternion ToMg(this Quaternion aq)
+    public static XNA.Quaternion ToMonoGame(this Quaternion aq)
     {
         var m = aq.GetMatrix();
         var n = m.ToMgTransposed();
@@ -58,7 +58,7 @@ public static class LoaderExtensions
     }
 
     // T O   M G  (convert for use with MonoGame) - MATRIX
-    public static XNA.Matrix ToMg(this Matrix4x4 ma)
+    public static XNA.Matrix ToMonoGame(this Matrix4x4 ma)
     {
         var m = XNA.Matrix.Identity;
         m.M11 = TestVal(ma.A1);
@@ -129,13 +129,13 @@ public static class LoaderExtensions
     }
 
     // T O   M G  (convert to use with MonoGame) - VECTOR3
-    public static XNA.Vector3 ToMg(this Vector3D v)
+    public static XNA.Vector3 ToMonoGame(this Vector3D v)
     {
         return new XNA.Vector3(v.X, v.Y, v.Z);
     }
 
     // T O   M G  (convert to use with MonoGame) - VECTOR4
-    public static XNA.Vector4 ToMg(this Color4D v)
+    public static XNA.Vector4 ToMonoGame(this Color4D v)
     {
         return new XNA.Vector4(v.R, v.G, v.B, v.A);
     }

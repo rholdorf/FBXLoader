@@ -80,7 +80,7 @@ public class Game1 : Game
 
         // load animation (custom settings, size = 35%) 
         //_hero[IDLE] = _skinModelLoader.Load("Kid/kid_idle.fbx", "Kid", true, 3, _skinFx, rescale: 0.35f);
-        _hero[IDLE] = _skinModelLoader.Load("Maria/Standing Idle.fbx", "Maria", true, 3, _skinFx);
+        _hero[IDLE] = _skinModelLoader.Load("Maria/Standing Idle.fbx", 3, _skinFx);
 
         // I n i t   P l a y e r:
         _mtxHeroRotate = Matrix.CreateFromYawPitchRoll(MathHelper.Pi, 0, 0); // let's have the character facing the camera at first          
